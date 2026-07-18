@@ -1,0 +1,17 @@
+{
+  "name": "ri-ri-qing-android-web",
+  "version": "1.1.0",
+  "private": true,
+  "scripts": {
+    "build": "vite build --config vite.config.ts"
+  },
+  "dependencies": {
+    "react": "19.2.6",
+    "react-dom": "19.2.6"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "6.0.2",
+    "typescript": "5.9.3",
+    "vite": "8.0.13"
+  }
+}

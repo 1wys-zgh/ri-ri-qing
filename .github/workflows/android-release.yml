@@ -1,0 +1,83 @@
+name: Build Android release
+
+on:
+  push:
+    branches:
+      - agent/android-app
+    paths:
+      - "android/**"
+      - ".github/workflows/android-release.yml"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing GitHub release tag
+        required: true
+        default: v1.1.0
+
+permissions:
+  contents: write
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: android/web/package-lock.json
+
+      - name: Build Android web interface
+        working-directory: android/web
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: 8.10.2
+
+      - name: Restore Android signing key
+        shell: bash
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: echo "$KEYSTORE_BASE64" | base64 --decode > android/release-key.jks
+
+      - name: Build signed Android APK
+        working-directory: android
+        env:
+          ANDROID_KEYSTORE: ${{ github.workspace }}/android/release-key.jks
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: gradle assembleRelease --no-daemon
+
+      - name: Verify and name APK
+        shell: bash
+        run: |
+          jarsigner -verify android/app/build/outputs/apk/release/app-release.apk
+          cp android/app/build/outputs/apk/release/app-release.apk RiRiQing-1.1.0-Android.apk
+
+      - name: Keep workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: RiRiQing-Android
+          path: RiRiQing-1.1.0-Android.apk
+
+      - name: Upload APK to public release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag || 'v1.1.0' }}
+        run: gh release upload "$RELEASE_TAG" RiRiQing-1.1.0-Android.apk --repo "$GITHUB_REPOSITORY" --clobber
