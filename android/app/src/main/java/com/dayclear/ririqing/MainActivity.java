@@ -16,8 +16,14 @@ import android.provider.OpenableColumns;
 import android.provider.Settings;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
+import android.webkit.WebResourceRequest;
+import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
+import android.util.Log;
+
+import androidx.webkit.WebViewAssetLoader;
+import androidx.webkit.WebViewClientCompat;
 
 import org.json.JSONObject;
 
@@ -44,10 +50,25 @@ public class MainActivity extends Activity {
         settings.setMediaPlaybackRequiresUserGesture(false);
         settings.setAllowFileAccess(true);
         webView.setWebChromeClient(new WebChromeClient());
+        WebViewAssetLoader assetLoader = new WebViewAssetLoader.Builder()
+                .addPathHandler("/assets/", new WebViewAssetLoader.AssetsPathHandler(this))
+                .build();
+        webView.setWebViewClient(new WebViewClientCompat() {
+            @Override
+            public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
+                return assetLoader.shouldInterceptRequest(request.getUrl());
+            }
+
+            @Override
+            @SuppressWarnings("deprecation")
+            public WebResourceResponse shouldInterceptRequest(WebView view, String url) {
+                return assetLoader.shouldInterceptRequest(Uri.parse(url));
+            }
+        });
         webView.addJavascriptInterface(new AndroidBridge(), "DayclearAndroid");
         webView.setBackgroundColor(Color.rgb(244, 240, 231));
         setContentView(webView);
-        webView.loadUrl("file:///android_asset/www/index.html");
+        webView.loadUrl("https://appassets.androidplatform.net/assets/www/index.html");
     }
 
     @Override
@@ -133,6 +154,11 @@ public class MainActivity extends Activity {
     }
 
     public final class AndroidBridge {
+        @JavascriptInterface
+        public void pageReady() {
+            Log.i("DAYCLEAR", "PAGE_READY");
+        }
+
         @JavascriptInterface
         public void syncReminders(String payload) {
             ReminderScheduler.sync(MainActivity.this, payload);

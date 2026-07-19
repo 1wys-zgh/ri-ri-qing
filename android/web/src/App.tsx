@@ -14,6 +14,7 @@ declare global {
       setAutoStart: (enabled: boolean) => Promise<boolean>;
     };
     DayclearAndroid?: {
+      pageReady: () => void;
       syncReminders: (payload: string) => void;
       requestReminderAccess: () => void;
       chooseMusic: () => void;
@@ -247,6 +248,10 @@ export default function Home() {
     category: "重要" as Category,
     repeat: "daily" as Repeat,
   });
+
+  useEffect(() => {
+    window.DayclearAndroid?.pageReady();
+  }, []);
 
   useEffect(() => {
     try {

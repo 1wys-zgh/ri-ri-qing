@@ -4,7 +4,7 @@
 
 ## Android 版
 
-[下载最新 Android APK](https://github.com/1wys-zgh/ri-ri-qing/releases/tag/v1.1.0)
+[下载最新 Android APK](https://github.com/1wys-zgh/ri-ri-qing/releases/latest)
 
 Android 版使用系统闹钟和前台音乐服务。退出界面、锁屏或重新开机后仍会安排提醒，支持上传并完整播放自己的音乐。
 

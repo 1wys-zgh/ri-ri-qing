@@ -12,7 +12,7 @@ on:
       tag:
         description: Existing GitHub release tag
         required: true
-        default: v1.1.0
+        default: v1.1.1
 
 permissions:
   contents: write
@@ -70,16 +70,43 @@ jobs:
           APKSIGNER=$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -n 1)
           if [ -z "$APKSIGNER" ]; then echo "Android apksigner was not found"; exit 1; fi
           "$APKSIGNER" verify --verbose --print-certs android/app/build/outputs/apk/release/app-release.apk
-          cp android/app/build/outputs/apk/release/app-release.apk RiRiQing-1.1.0-Android.apk
+          cp android/app/build/outputs/apk/release/app-release.apk RiRiQing-1.1.1-Android.apk
+
+      - name: Verify interface in Android emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          script: |
+            adb logcat -c
+            adb install -r RiRiQing-1.1.1-Android.apk
+            adb shell am force-stop com.dayclear.ririqing
+            adb shell am start -W -n com.dayclear.ririqing/.MainActivity
+            ready=false
+            for attempt in $(seq 1 30); do
+              if adb logcat -d -s DAYCLEAR:I '*:S' | grep -q PAGE_READY; then ready=true; break; fi
+              sleep 2
+            done
+            adb exec-out screencap -p > android-interface.png
+            if [ "$ready" != "true" ]; then adb logcat -d; echo "React interface did not render"; exit 1; fi
+            if adb logcat -d -b crash | grep -q "FATAL EXCEPTION"; then adb logcat -d -b crash; exit 1; fi
 
       - name: Keep workflow artifact
         uses: actions/upload-artifact@v4
         with:
           name: RiRiQing-Android
-          path: RiRiQing-1.1.0-Android.apk
+          path: |
+            RiRiQing-1.1.1-Android.apk
+            android-interface.png
 
       - name: Upload APK to public release
         env:
           GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ inputs.tag || 'v1.1.0' }}
-        run: gh release upload "$RELEASE_TAG" RiRiQing-1.1.0-Android.apk --repo "$GITHUB_REPOSITORY" --clobber
+          RELEASE_TAG: ${{ inputs.tag || 'v1.1.1' }}
+        run: |
+          if ! gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release create "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "日日清 Android v1.1.1" --notes "修复部分 Android 手机打开后显示空白的问题，改用安全的本地 HTTPS 资源加载。"
+          fi
+          gh release upload "$RELEASE_TAG" RiRiQing-1.1.1-Android.apk --repo "$GITHUB_REPOSITORY" --clobber
