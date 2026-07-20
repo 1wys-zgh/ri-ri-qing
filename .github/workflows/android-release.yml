@@ -84,10 +84,24 @@ jobs:
             adb install -r RiRiQing-1.1.1-Android.apk
             adb shell am force-stop com.dayclear.ririqing
             adb shell am start -n com.dayclear.ririqing/.MainActivity
-            sleep 20
+            sleep 30
             adb exec-out screencap -p > android-interface.png
-            adb logcat -d -s DAYCLEAR:I '*:S' > dayclear-ready.log
-            grep -q PAGE_READY dayclear-ready.log
+            adb logcat -d > android-logcat.txt
+            adb logcat -d -s DAYCLEAR:V '*:S' > dayclear-ready.log
+
+      - name: Keep interface diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Android-interface-diagnostics
+          path: |
+            android-interface.png
+            android-logcat.txt
+            dayclear-ready.log
+
+      - name: Confirm React interface rendered
+        shell: bash
+        run: grep -q PAGE_READY dayclear-ready.log
 
       - name: Keep workflow artifact
         uses: actions/upload-artifact@v4
