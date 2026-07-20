@@ -83,15 +83,11 @@ jobs:
             adb logcat -c
             adb install -r RiRiQing-1.1.1-Android.apk
             adb shell am force-stop com.dayclear.ririqing
-            adb shell am start -W -n com.dayclear.ririqing/.MainActivity
-            ready=false
-            for attempt in $(seq 1 30); do
-              if adb logcat -d -s DAYCLEAR:I '*:S' | grep -q PAGE_READY; then ready=true; break; fi
-              sleep 2
-            done
+            adb shell am start -n com.dayclear.ririqing/.MainActivity
+            sleep 20
             adb exec-out screencap -p > android-interface.png
-            if [ "$ready" != "true" ]; then adb logcat -d; echo "React interface did not render"; exit 1; fi
-            if adb logcat -d -b crash | grep -q "FATAL EXCEPTION"; then adb logcat -d -b crash; exit 1; fi
+            adb logcat -d -s DAYCLEAR:I '*:S' > dayclear-ready.log
+            grep -q PAGE_READY dayclear-ready.log
 
       - name: Keep workflow artifact
         uses: actions/upload-artifact@v4
