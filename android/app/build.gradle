@@ -1,0 +1,48 @@
+plugins {
+    id "com.android.application"
+}
+
+def releaseKeystore = System.getenv("ANDROID_KEYSTORE")
+def hasReleaseSigning = releaseKeystore != null && !releaseKeystore.isBlank()
+
+android {
+    namespace "com.dayclear.ririqing"
+    compileSdk 35
+
+    defaultConfig {
+        applicationId "com.dayclear.ririqing"
+        minSdk 26
+        targetSdk 35
+        versionCode 3
+        versionName "1.1.1"
+    }
+
+    if (hasReleaseSigning) {
+        signingConfigs {
+            release {
+                storeFile file(releaseKeystore)
+                storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD")
+                keyAlias System.getenv("ANDROID_KEY_ALIAS")
+                keyPassword System.getenv("ANDROID_KEY_PASSWORD")
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            shrinkResources false
+            signingConfig hasReleaseSigning ? signingConfigs.release : signingConfigs.debug
+            proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation "androidx.webkit:webkit:1.12.1"
+}

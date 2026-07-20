@@ -2,6 +2,12 @@
 
 每天知道该做什么、到点提醒、完成打卡与连续记录。
 
+## Android 版
+
+[下载最新 Android APK](https://github.com/1wys-zgh/ri-ri-qing/releases/latest)
+
+Android 版使用系统闹钟和前台音乐服务。退出界面、锁屏或重新开机后仍会安排提醒，支持上传并完整播放自己的音乐。
+
 ## Windows 版
 
 [下载最新 Windows 便携版](https://github.com/1wys-zgh/ri-ri-qing/releases/latest)

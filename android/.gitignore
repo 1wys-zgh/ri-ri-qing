@@ -1,0 +1,7 @@
+.gradle/
+build/
+app/build/
+web/node_modules/
+app/src/main/assets/www/
+release-key.jks
+local.properties
