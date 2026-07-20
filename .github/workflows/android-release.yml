@@ -75,16 +75,17 @@ jobs:
       - name: Verify interface in Android emulator
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 35
+          api-level: 29
+          target: google_apis
           arch: x86_64
-          profile: pixel_6
+          profile: pixel_2
           disable-animations: true
           script: |
             adb logcat -c
             adb install -r RiRiQing-1.1.1-Android.apk
             adb shell am force-stop com.dayclear.ririqing
             adb shell am start -n com.dayclear.ririqing/.MainActivity
-            sleep 30
+            sleep 90
             adb exec-out screencap -p > android-interface.png
             adb logcat -d > android-logcat.txt
             adb logcat -d -s DAYCLEAR:V '*:S' > dayclear-ready.log
